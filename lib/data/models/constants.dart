@@ -1,1 +1,1 @@
-const String apiURL = 'https://ebalance-api.lobolabs.com.br/api/';
+const String apiURL = "ebalance-api.lobolabs.com.br";

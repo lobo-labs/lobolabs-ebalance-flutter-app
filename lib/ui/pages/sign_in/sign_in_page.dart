@@ -3,7 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lobolabs_ebalance_flutter_app/core/shared-data.dart';
 import 'package:lobolabs_ebalance_flutter_app/data/models/response/sign_in_response.dart';
 import 'package:lobolabs_ebalance_flutter_app/ui/pages/home/HomePage.dart';
-import 'package:lobolabs_ebalance_flutter_app/ui/pages/sign_in/sign_in_cubit.dart';
+import 'package:lobolabs_ebalance_flutter_app/ui/pages/sign_in/sign_in_bloc.dart';
+import 'package:lobolabs_ebalance_flutter_app/ui/pages/sign_in/sign_in_event.dart';
 import 'package:lobolabs_ebalance_flutter_app/ui/pages/sign_in/sign_in_state.dart';
 
 class SignInPage extends StatefulWidget {
@@ -20,46 +21,55 @@ class _SignInPageState extends State<SignInPage> {
     SharedData data = SharedData();
     var isAuthorized = data.hasToken();
     isAuthorized
-        .then((value) => {
-              if (value)
-                {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              const HomePage(isAdmin: (true))))
-                }
-            })
-        .onError((error, stackTrace) => data.clear());
+        .then((value) =>
+    {
+      if (value)
+        {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                  const HomePage(isAdmin: (true))))
+        }
+    }).onError((error, stackTrace) => data.clear());
   }
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.watch<SignInCubit>();
+    final colorScheme = Theme
+        .of(context)
+        .colorScheme;
 
-    final colorScheme = Theme.of(context).colorScheme;
+    return BlocConsumer<SignInBloc, SignInState>(
+      listener: (context, state) {
 
-    return Scaffold(
-        body: switch (cubit.state) {
-      OnSignInForm() => signInForm(cubit, colorScheme),
-      OnSignInLoading() => const Center(child: CircularProgressIndicator()),
-      OnSignInSuccess(response: SignInResponse response) => const Center(
-          child: Text(
-            'Sucesso!',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ),
-      OnSignInError(error: String error) => const Center(
-          child: Text(
-            "Erro!",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ),
-    });
+      },
+      builder: (context, state) {
+        return Scaffold(
+            body: switch (state) {
+              SignInFormState() => signInForm(context, colorScheme),
+              SignInLoadingState() =>
+              const Center(child: CircularProgressIndicator()),
+              SignInSuccessState(response: SignInResponse response) =>
+              const Center(
+                child: Text(
+                  'Sucesso!',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+              SignInErrorState(error: String error) =>
+              const Center(
+                child: Text(
+                  "Erro!",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+            });
+      },
+    );
   }
 
-  Widget signInForm(SignInCubit cubit, ColorScheme colorScheme) {
-
+  Widget signInForm(BuildContext context, ColorScheme colorScheme) {
     String email = '';
     String password = '';
 
@@ -167,7 +177,7 @@ class _SignInPageState extends State<SignInPage> {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 20)),
                 onPressed: () {
-                  cubit.doLogin(email, password);
+                  context.read<SignInBloc>().add(SignInCallEvent(email, password));
                 },
                 child: Text(
                   'Entrar',
